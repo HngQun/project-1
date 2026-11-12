@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hỏi Bài – Xem Tarot online</title>
+<style>
+:root{--bg:#080914;--panel:rgba(20,21,43,.92);--line:#3c3b5c;--ink:#f4eddf;--mut:#b4b3ca;--acc:#9263c7;--gold:#d6b56a;--cw:clamp(52px,9vw,96px)}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{background:var(--bg);isolation:isolate;color:var(--ink);font:17px/1.65 "Trebuchet MS","Segoe UI",sans-serif;overflow-x:hidden}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:normal;line-height:1.2}
+.stage{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:32px 18px 60px;animation:in .6s ease}
+.stage[hidden]{display:none}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+.brand{font-family:Georgia,serif;color:var(--gold);font-size:20px;margin-bottom:28px}
+.hero h1{position:relative;z-index:2;font-size:clamp(34px,6.4vw,62px);max-width:14em;margin-bottom:14px}
+.hero p.sub{color:var(--mut);max-width:34em;margin-bottom:26px}
+.ask{display:flex;gap:10px;max-width:700px;flex-wrap:wrap}
+.ask textarea{flex:1 1 320px;min-height:64px;padding:14px 16px;font:inherit;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:10px;resize:none}
+.ask textarea:focus{outline:none;border-color:var(--gold)}
+.btn{padding:14px 26px;font:inherit;font-weight:bold;color:#fff;background:var(--acc);border:0;border-radius:10px;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--ink)}
+.err{color:#ff9d80;margin-top:10px;min-height:24px;font-size:15px}
+.eg{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;max-width:700px}
+.eg button{font:inherit;font-size:14px;color:var(--mut);background:transparent;border:1px solid var(--line);border-radius:20px;padding:5px 12px;cursor:pointer}
+.eg button:hover{color:var(--ink);border-color:var(--gold)}
+.hero > :not(.deco){position:relative;z-index:1}
+.deco{position:absolute;z-index:0;right:18px;top:calc(50% - 250px);width:300px;height:280px;margin:0;pointer-events:none;opacity:.9}
+.deco .card{position:absolute;left:50%;top:60px;margin-left:calc(var(--cw)/-2);transform-origin:50% 140%;animation:sway 6s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(var(--a))}to{transform:rotate(calc(var(--a) + 5deg))}}
+@media(max-width:480px){
+  .deco{right:0;top:calc(50% - 270px);width:220px;height:210px;--cw:72px;opacity:.65}
+}
+
+/* Card */
+.card{width:var(--cw);height:calc(var(--cw)*1.7);border-radius:7px;cursor:pointer;
+background:#173240 url("images/back.jpg") center / cover no-repeat;
+border:2px solid var(--gold);box-shadow:0 4px 12px rgba(0,0,0,.45)}
+
+/* Spread */
+.head{margin-bottom:6px}
+.head h2{font-size:clamp(24px,4vw,34px)}
+.q-echo{color:var(--gold);font-family:Georgia,serif;font-style:italic;margin:6px 0 4px}
+.hint{color:var(--mut);font-size:15px}
+.fan{position:relative;height:calc(var(--cw)*1.7 + 80px);margin-top:26px}
+.fan .card{position:absolute;left:50%;top:50px;margin-left:calc(var(--cw)/-2);transition:transform .8s cubic-bezier(.2,.8,.2,1),opacity .5s,box-shadow .3s}
+.fan .card:hover{box-shadow:0 0 0 2px var(--gold),0 8px 18px rgba(0,0,0,.5)}
+.fan .card.sel{box-shadow:0 0 0 3px var(--acc),0 0 22px var(--acc)}
+.fan.done .card:not(.sel){opacity:0;pointer-events:none}
+.count{margin-top:14px;font-family:Georgia,serif;font-size:20px;color:var(--gold)}
+
+/* Reading */
+.row3{display:flex;justify-content:center;gap:clamp(12px,4vw,40px);margin:24px 0 28px}
+.slot{text-align:center;width:min(30vw,170px)}
+.flip{perspective:900px;width:100%;aspect-ratio:1/1.7}
+.flip .in{position:relative;width:100%;height:100%;transition:transform 1s cubic-bezier(.3,.8,.3,1);transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .bk,.flip .ft{position:absolute;inset:0;border-radius:9px;border:2px solid var(--gold);backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 6px 18px rgba(0,0,0,.5);overflow:hidden}
+.flip .bk{transform:rotateY(0deg);background:#173240 url("images/back.jpg") center / cover no-repeat}
+.flip .ft{transform:rotateY(180deg);background:#efe6d2;color:#2a2418;overflow:hidden}
+.ft .art{display:block;width:100%;height:100%;object-fit:contain;background:#efe6d2}
+.ft .image-error{position:absolute;inset:0;align-items:center;justify-content:center;padding:16px;text-align:center;font-size:13px}
+.ft .image-error:not([hidden]){display:flex}
+.ft.rev .art{transform:rotate(180deg)}
+.card-credit{text-align:center;color:var(--mut);font-size:12px;margin:-12px 0 24px}
+.card-credit a{color:inherit;text-underline-offset:3px}
+.cap{margin-top:10px;font-size:14px;color:var(--mut);opacity:0;transition:opacity .6s}
+.cap b{display:block;color:var(--ink);font-family:Georgia,serif;font-size:16px;font-weight:normal}
+.slot.shown .cap{opacity:1}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px clamp(16px,4vw,30px);max-width:720px;margin:0 auto}
+.panel h3{font-size:clamp(20px,3.4vw,26px);margin-bottom:14px}
+.prog{color:var(--mut);font-size:14px;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.chips button{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:20px;padding:6px 14px;cursor:pointer}
+.chips button:hover{border-color:var(--gold)}
+.panel textarea{width:100%;min-height:78px;padding:12px;font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:10px;resize:vertical;margin-bottom:14px}
+.panel textarea:focus{outline:none;border-color:var(--gold)}
+.load{display:flex;align-items:center;gap:12px;color:var(--mut)}
+.spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp 1s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.res h3{color:var(--gold);margin:18px 0 6px;font-size:20px}
+.res h3:first-child{margin-top:0}
+.res p{margin-bottom:10px}.res ul{margin:0 0 10px 20px}
+.res li{margin-bottom:4px}
+.foot{color:var(--mut);font-size:13px;margin-top:16px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+/* Vũ trụ: các lớp trang trí không chặn thao tác trên nội dung. */
+.cosmos{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+background:radial-gradient(ellipse at 80% 20%,#1c1838 0,transparent 55%),linear-gradient(160deg,#080914,#0c1226 65%,#080914)}
+.cosmos::before{content:"";position:absolute;inset:-12%;opacity:.7;
+background:radial-gradient(ellipse at 76% 24%,rgba(126,65,173,.36),transparent 38%),radial-gradient(ellipse at 25% 80%,rgba(34,108,143,.25),transparent 42%),radial-gradient(ellipse at 95% 90%,rgba(104,53,133,.22),transparent 35%);
+animation:nebula-drift 28s ease-in-out infinite alternate}
+.cosmos::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 35% 48%,rgba(8,9,20,.52),transparent 75%)}
+.star{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);border-radius:50%;background:#e1e8ff;opacity:var(--opacity);animation:twinkle var(--duration) ease-in-out var(--delay) infinite alternate}
+.star.bright{background:#fff4d9;box-shadow:0 0 7px 1px #c7bbf580}
+.meteor{position:absolute;top:var(--top);left:var(--left);height:1px;width:var(--length,140px);opacity:0;background:linear-gradient(90deg,transparent,#d7d5ff);transform:rotate(35deg);animation:meteor-flight var(--duration,9s) linear var(--delay) infinite}
+.meteor::after{content:"";position:absolute;right:0;top:-1px;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 8px #d7d5ff}
+@keyframes nebula-drift{to{transform:translate3d(-3%,3%,0) scale(1.08)}}
+@keyframes twinkle{from{opacity:calc(var(--opacity)*.35)}to{opacity:var(--opacity)}}
+@keyframes meteor-flight{0%{opacity:0;transform:translate3d(0,0,0) rotate(35deg)}3%{opacity:.85}20%,100%{opacity:0;transform:translate3d(460px,322px,0) rotate(35deg)}}
+.brand{letter-spacing:.12em;text-shadow:0 0 24px #d6b56a45}
+.hero h1{text-shadow:0 2px 24px #080914}
+.panel{box-shadow:0 16px 60px #0004}
+.btn{box-shadow:0 4px 22px #9263c726;transition:box-shadow .25s,filter .25s}
+.btn:hover{box-shadow:0 4px 28px #9263c74d}
+.eg button{background:#0d1023b3}
+.cosmos.paused *, .cosmos.paused::before{animation-play-state:paused}
+@media(max-width:600px){.star:nth-child(n+61){display:none}.meteor{width:90px}.cosmos::before{animation-duration:40s}}
+@media(prefers-reduced-motion:reduce){.meteor{display:none}}
+
+/* Ánh sáng tương tác và hiệu ứng chọn / lật bài. */
+.cursor-aura{position:fixed;left:0;top:0;width:380px;height:380px;margin:-190px;z-index:0;pointer-events:none;opacity:0;background:radial-gradient(circle,#ad83ed19,transparent 68%);transition:opacity .6s;will-change:transform}
+.cursor-aura.active{opacity:1}
+.btn{position:relative;overflow:hidden}
+.btn::after{content:"";position:absolute;inset:-60% -100%;pointer-events:none;background:linear-gradient(110deg,transparent 43%,#ffffff26 50%,transparent 57%);transform:translateX(-45%)}
+.btn:hover::after{animation:button-shine .8s ease-out}
+@keyframes button-shine{to{transform:translateX(45%)}}
+.ask textarea,.panel textarea{transition:border-color .3s,box-shadow .3s}
+.ask textarea:focus,.panel textarea:focus{box-shadow:0 0 0 4px #d6b56a0d,0 0 30px #a77ee51c}
+.fan .card::after{content:"";position:absolute;inset:4px;border:1px solid transparent;border-radius:4px;pointer-events:none;transition:border-color .3s}
+.fan .card.sel::after{border-color:#ffe6ad;animation:selected-glow 1.8s ease-in-out infinite alternate}
+@keyframes selected-glow{to{box-shadow:inset 0 0 18px #e6c88970,0 0 16px #c59aff70}}
+.slot{position:relative}
+.slot::before{content:"";position:absolute;inset:-20px -35px 20px;z-index:-1;pointer-events:none;background:radial-gradient(ellipse,#b990e545,transparent 68%);opacity:0}
+.slot.shown::before{animation:reveal-aura 1.6s ease-out forwards}
+@keyframes reveal-aura{0%{opacity:0;transform:scale(.7)}35%{opacity:1;transform:scale(1.1)}100%{opacity:.35;transform:scale(1)}}
+.slot.shown .cap{animation:caption-rise .6s ease-out}
+@keyframes caption-rise{from{transform:translateY(8px)}to{transform:translateY(0)}}
+.fx-ripple{position:fixed;width:14px;height:14px;margin:-7px;border:1px solid #e4ccff;border-radius:50%;pointer-events:none;z-index:10;animation:ripple-out .7s ease-out forwards}
+@keyframes ripple-out{to{transform:scale(6);opacity:0}}
+.fx-spark{position:fixed;width:4px;height:4px;margin:-2px;background:#ffe3a2;border-radius:50%;box-shadow:0 0 8px #e3bdff;pointer-events:none;z-index:10;animation:spark-out .85s ease-out forwards}
+@keyframes spark-out{to{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+@media(pointer:coarse){.cursor-aura{display:none}}
+@media(prefers-reduced-motion:reduce){.cursor-aura,.fx-ripple,.fx-spark{display:none}.slot.shown::before{opacity:.3}}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div class="cursor-aura" id="cursorAura" aria-hidden="true"></div>
+<div class="cosmos" id="cosmos" aria-hidden="true">
+  <div id="starfield"></div>
+  <span class="meteor" style="--top:4%;--left:8%;--duration:7s;--delay:-1s;--length:110px"></span>
+  <span class="meteor" style="--top:12%;--left:34%;--duration:9s;--delay:-4s;--length:160px"></span>
+  <span class="meteor" style="--top:2%;--left:62%;--duration:8s;--delay:-6s;--length:140px"></span>
+  <span class="meteor" style="--top:26%;--left:-12%;--duration:10s;--delay:-3s;--length:180px"></span>
+  <span class="meteor" style="--top:38%;--left:18%;--duration:8.5s;--delay:-7s;--length:120px"></span>
+  <span class="meteor" style="--top:18%;--left:76%;--duration:11s;--delay:-9s;--length:150px"></span>
+  <span class="meteor" style="--top:54%;--left:-8%;--duration:9.5s;--delay:-5s;--length:130px"></span>
+  <span class="meteor" style="--top:44%;--left:46%;--duration:7.5s;--delay:-2s;--length:170px"></span>
+  <span class="meteor" style="--top:64%;--left:12%;--duration:12s;--delay:-10s;--length:100px"></span>
+  <span class="meteor" style="--top:6%;--left:88%;--duration:10.5s;--delay:-8s;--length:140px"></span>
+  <span class="meteor" style="--top:30%;--left:58%;--duration:8s;--delay:-3.5s;--length:110px"></span>
+  <span class="meteor" style="--top:72%;--left:38%;--duration:11.5s;--delay:-6.5s;--length:160px"></span>
+</div>
+
+<!-- 1. Trang đầu -->
+<section class="stage hero" id="s-hero">
+  <div class="brand">Hỏi Bài</div>
+  <h1>Điều gì đang làm bạn băn khoăn?</h1>
+  <p class="sub">Viết câu hỏi của bạn, chọn ba lá bài, trả lời vài câu hỏi ngắn. Lá bài sẽ giúp bạn nhìn rõ hơn điều mình đang tìm.</p>
+  <form class="ask" id="askForm">
+    <textarea id="q" maxlength="200" placeholder="Ví dụ: Tôi có nên đổi việc trong năm nay không?" aria-label="Câu hỏi của bạn"></textarea>
+    <button class="btn" type="submit">Trải bài</button>
+  </form>
+  <div class="err" id="err" role="alert"></div>
+  <div class="eg" id="eg"></div>
+  <div class="deco" aria-hidden="true" id="deco"></div>
+</section>
+
+<!-- 2. Trải bài -->
+<section class="stage" id="s-spread" hidden>
+  <div class="head"><h2>Chọn ba lá bài thu hút bạn</h2></div>
+  <div class="q-echo" id="echo"></div>
+  <div class="hint">Hít một hơi sâu, tập trung vào câu hỏi rồi chạm vào ba lá bài.</div>
+  <div class="fan" id="fan"></div>
+  <div class="count" id="count">Đã chọn 0 / 3</div>
+</section>
+
+<!-- 3. Lật bài, hỏi đáp và kết quả -->
+<section class="stage" id="s-read" hidden>
+  <div class="head"><h2>Thông điệp từ ba lá bài</h2></div>
+  <div class="q-echo" id="echo2"></div>
+  <div class="row3" id="row3"></div>
+  <div class="panel" id="panel"></div>
+</section>
+
+<script src="config.js"></script>
+<script>
+// Dọn các hạt sáng sau hiệu ứng; tôn trọng chế độ giảm chuyển động.
+function cardSpark(element) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const rect = element.getBoundingClientRect();
+  for (let i = 0; i < 10; i++) {
+    const particle = document.createElement('span');
+    const angle = i * Math.PI / 5;
+    particle.className = 'fx-spark';
+    particle.setAttribute('aria-hidden', 'true');
+    particle.style.cssText = `left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;--dx:${Math.cos(angle) * (rect.width / 2 + 35)}px;--dy:${Math.sin(angle) * (rect.height / 2 + 30)}px`;
+    document.body.appendChild(particle);
+    setTimeout(() => particle.remove(), 900);
+  }
+}
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointer = matchMedia('(pointer: fine)');
+  const aura = document.getElementById('cursorAura');
+  let frame = 0, x = 0, y = 0;
+  document.addEventListener('pointermove', event => {
+    if (reduced.matches || !finePointer.matches) return;
+    x = event.clientX; y = event.clientY;
+    if (!frame) frame = requestAnimationFrame(() => {
+      aura.style.transform = `translate3d(${x}px,${y}px,0)`;
+      aura.classList.add('active'); frame = 0;
+    });
+  }, {passive: true});
+  document.documentElement.addEventListener('pointerleave', () => aura.classList.remove('active'));
+  document.addEventListener('click', event => {
+    if (reduced.matches || !event.target.closest('button, .fan .card')) return;
+    const rect = event.target.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'fx-ripple';
+    ripple.setAttribute('aria-hidden', 'true');
+    ripple.style.left = (event.detail ? event.clientX : rect.left + rect.width / 2) + 'px';
+    ripple.style.top = (event.detail ? event.clientY : rect.top + rect.height / 2) + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 750);
+  });
+})();
+
+// Tạo sao một lần; CSS đảm nhiệm chuyển động, không chạy vòng lặp JavaScript.
+(() => {
+  const field = document.getElementById('starfield');
+  const stars = document.createDocumentFragment();
+  for (let i = 0; i < 100; i++) {
+    const star = document.createElement('span');
+    star.className = 'star' + (i % 9 === 0 ? ' bright' : '');
+    star.style.cssText = `--x:${Math.random() * 100}%;--y:${Math.random() * 100}%;--size:${i % 9 === 0 ? 2.5 : 1 + Math.random()}px;--opacity:${.3 + Math.random() * .6};--duration:${3 + Math.random() * 5}s;--delay:${-Math.random() * 8}s`;
+    stars.appendChild(star);
+  }
+  field.appendChild(stars);
+  const updateMotion = () => document.getElementById('cosmos').classList.toggle('paused', document.hidden);
+  document.addEventListener('visibilitychange', updateMotion);
+  updateMotion();
+})();
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- Bộ bài 78 lá ---------- */
+const MAJOR = ['Chàng Khờ','Nhà Ảo Thuật','Nữ Tư Tế','Hoàng Hậu','Hoàng Đế','Giáo Hoàng','Cặp Đôi','Cỗ Xe','Sức Mạnh','Ẩn Sĩ','Bánh Xe Số Phận','Công Lý','Người Treo Ngược','Thần Chết','Điều Độ','Ác Quỷ','Tòa Tháp','Ngôi Sao','Mặt Trăng','Mặt Trời','Phán Xét','Thế Giới'];
+const SUITS = ['Gậy','Cốc','Kiếm','Tiền'];
+const RANKS = ['Ách','Hai','Ba','Bốn','Năm','Sáu','Bảy','Tám','Chín','Mười','Thị Đồng','Hiệp Sĩ','Hoàng Hậu','Vua'];
+const DECK = MAJOR.map(name => ({name}));
+SUITS.forEach(suit => RANKS.forEach(rank => DECK.push({name: rank + ' ' + suit})));
+// Ảnh Rider–Waite theo đúng thứ tự 78 lá từ https://phogotarot.com/cards.
+const CARD_IMAGES = [
+  "00-the-fool.webp",
+  "01-the-magician.webp",
+  "02-the-high-priestess.webp",
+  "03-the-empress.webp",
+  "04-the-emperor.webp",
+  "05-the-hierophant.webp",
+  "06-the-lovers.webp",
+  "07-the-chariot.webp",
+  "08-strength.webp",
+  "09-the-hermit.webp",
+  "10-wheel-of-fortune.webp",
+  "11-justice.webp",
+  "12-the-hanged-man.webp",
+  "13-death.webp",
+  "14-temperance.webp",
+  "15-the-devil.webp",
+  "16-the-tower.webp",
+  "17-the-star.webp",
+  "18-the-moon.webp",
+  "19-the-sun.webp",
+  "20-judgement.webp",
+  "21-the-world.webp",
+  "22-ace-of-wands.webp",
+  "23-two-of-wands.webp",
+  "24-three-of-wands.webp",
+  "25-four-of-wands.webp",
+  "26-five-of-wands.webp",
+  "27-six-of-wands.webp",
+  "28-seven-of-wands.webp",
+  "29-eight-of-wands.webp",
+  "30-nine-of-wands.webp",
+  "31-ten-of-wands.webp",
+  "32-page-of-wands.webp",
+  "33-knight-of-wands.webp",
+  "34-queen-of-wands.webp",
+  "35-king-of-wands.webp",
+  "36-ace-of-cups.webp",
+  "37-two-of-cups.webp",
+  "38-three-of-cups.webp",
+  "39-four-of-cups.webp",
+  "40-five-of-cups.webp",
+  "41-six-of-cups.webp",
+  "42-seven-of-cups.webp",
+  "43-eight-of-cups.webp",
+  "44-nine-of-cups.webp",
+  "45-ten-of-cups.webp",
+  "46-page-of-cups.webp",
+  "47-knight-of-cups.webp",
+  "48-queen-of-cups.webp",
+  "49-king-of-cups.webp",
+  "50-ace-of-swords.webp",
+  "51-two-of-swords.webp",
+  "52-three-of-swords.webp",
+  "53-four-of-swords.webp",
+  "54-five-of-swords.webp",
+  "55-six-of-swords.webp",
+  "56-seven-of-swords.webp",
+  "57-eight-of-swords.webp",
+  "58-nine-of-swords.webp",
+  "59-ten-of-swords.webp",
+  "60-page-of-swords.webp",
+  "61-knight-of-swords.webp",
+  "62-queen-of-swords.webp",
+  "63-king-of-swords.webp",
+  "64-ace-of-pentacles.webp",
+  "65-two-of-pentacles.webp",
+  "66-three-of-pentacles.webp",
+  "67-four-of-pentacles.webp",
+  "68-five-of-pentacles.webp",
+  "69-six-of-pentacles.webp",
+  "70-seven-of-pentacles.webp",
+  "71-eight-of-pentacles.webp",
+  "72-nine-of-pentacles.webp",
+  "73-ten-of-pentacles.webp",
+  "74-page-of-pentacles.webp",
+  "75-knight-of-pentacles.webp",
+  "76-queen-of-pentacles.webp",
+  "77-king-of-pentacles.webp"
+];
+DECK.forEach((card, i) => {
+  card.image = "images/cards/" + CARD_IMAGES[i];
+});
+const POS = ['Bối cảnh', 'Thử thách', 'Hướng đi'];
+
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- Gọi AI (ShopAIKey, định dạng OpenAI) ---------- */
+async function ai(messages, max = 2000) {
+  if (!CONFIG.API_KEY || CONFIG.API_KEY.startsWith('DAN_')) throw new Error('Chưa điền API key. Mở file index.html và điền vào CONFIG.API_KEY.');
+  let r;
+  try {
+    r = await fetch(CONFIG.BASE_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.API_KEY},
+      body: JSON.stringify({model: CONFIG.MODEL, messages, max_tokens: max})
+    });
+  } catch (e) { throw new Error('Không kết nối được tới API (mạng hoặc CORS). Mở F12 > Console để xem chi tiết.'); }
+  if (!r.ok) {
+    let t = ''; try { t = (await r.json()).error?.message || ''; } catch (e) {}
+    throw new Error('API trả lỗi ' + r.status + (t ? ': ' + t : ''));
+  }
+  const d = await r.json();
+  return d.choices?.[0]?.message?.content || '';
+}
+const SYS = 'Bạn là người đọc bài Tarot giàu kinh nghiệm, nói tiếng Việt, giọng ấm áp, đồng cảm và thực tế. Bạn không khẳng định tuyệt đối về tương lai và không thay thế tư vấn y tế, pháp lý hay tài chính.';
+const cardsText = cs => cs.map((c, i) => `${POS[i]}: ${c.name}${c.rev ? ' (ngược)' : ' (xuôi)'}`).join('; ');
+
+/* ---------- Trang đầu ---------- */
+const EG = ['Tôi có nên đổi việc không?', 'Mối quan hệ này sẽ đi về đâu?', 'Tháng tới tài chính của tôi thế nào?'];
+$('#eg').innerHTML = EG.map(t => `<button type="button">${t}</button>`).join('');
+$('#eg').onclick = e => { if (e.target.tagName === 'BUTTON') { $('#q').value = e.target.textContent; $('#q').focus(); } };
+$('#deco').innerHTML = [-24, -12, 0, 12, 24].map(a => `<div class="card" style="--a:${a}deg;transform:rotate(${a}deg)"></div>`).join('');
+$('#q').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#askForm').requestSubmit(); } });
+
+let question = '', picks = [], deck = [];
+$('#askForm').onsubmit = e => {
+  e.preventDefault();
+  question = $('#q').value.trim();
+  if (question.length < 4) { $('#err').textContent = 'Hãy viết câu hỏi của bạn (ít nhất vài chữ) để lá bài có điều để trả lời.'; return; }
+  $('#err').textContent = '';
+  $('#s-hero').hidden = true; $('#s-spread').hidden = false;
+  $('#echo').textContent = '“' + question + '”';
+  startSpread();
+};
+
+/* ---------- Trải bài ---------- */
+const N = 21; let cards = [], pos = [], lock = false;
+function startSpread() {
+  deck = shuffle(DECK).map(c => ({...c, rev: Math.random() < .3}));
+  const fan = $('#fan'); fan.innerHTML = ''; cards = [];
+  for (let i = 0; i < N; i++) {
+    const c = document.createElement('div'); c.className = 'card'; c.dataset.i = i;
+    c.setAttribute('role', 'button'); c.setAttribute('aria-label', 'Lá bài ' + (i + 1));
+    c.tabIndex = 0; c.style.transform = 'translate(0,0)';
+    c.onclick = () => toggle(i);
+    c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(i); } };
+    fan.appendChild(c); cards.push(c);
+  }
+  picks = []; lock = false; fan.classList.remove('done'); updateCount();
+  requestAnimationFrame(() => setTimeout(() => place(true), 350)); // bày bài từ chồng bài ra
+}
+function place(stagger) {
+  const fan = $('#fan'), w = fan.clientWidth, cw = cards[0].offsetWidth, gap = (w - cw) / (N - 1);
+  cards.forEach((c, i) => {
+    const m = i - (N - 1) / 2, x = m * gap, y = Math.pow(m / (N / 2), 2) * 26 + (picks.includes(i) ? -30 : 0), r = m * 2.6;
+    c.style.transitionDelay = stagger ? i * 35 + 'ms' : '0ms';
+    c.style.transform = `translate(${x}px,${y}px) rotate(${r}deg)`;
+    c.style.zIndex = i;
+  });
+}
+addEventListener('resize', () => { if (cards.length && !$('#s-spread').hidden) place(false); });
+function updateCount() { $('#count').textContent = 'Đã chọn ' + picks.length + ' / 3'; }
+async function toggle(i) {
+  if (lock) return;
+  const k = picks.indexOf(i);
+  if (k >= 0) picks.splice(k, 1);
+  else { if (picks.length >= 3) return; picks.push(i); cardSpark(cards[i]); }
+  cards.forEach((c, j) => c.classList.toggle('sel', picks.includes(j)));
+  place(false); updateCount();
+  if (picks.length === 3) {
+    lock = true; await sleep(700);
+    $('#fan').classList.add('done'); await sleep(600);
+    startReading();
+  }
+}
+
+/* ---------- Lật bài ---------- */
+let chosen = [];
+async function startReading() {
+  chosen = picks.map(i => deck[i]);
+  $('#s-spread').hidden = true; $('#s-read').hidden = false;
+  $('#echo2').textContent = '“' + question + '”';
+  $('#row3').innerHTML = chosen.map((c, i) => `
+    <div class="slot" id="slot${i}">
+      <div class="flip" id="flip${i}"><div class="in">
+        <div class="bk"></div>
+        <div class="ft${c.rev ? ' rev' : ''}"><img class="art" src="${esc(c.image)}" alt="${esc(c.name)}${c.rev ? ' (ngược)' : ''}" loading="eager" onerror="this.style.display='none';this.nextElementSibling.hidden=false"><span class="image-error" role="status" hidden>Không tải được ảnh ${esc(c.name)}. Hãy mở trang cùng thư mục images/cards.</span></div>
+      </div></div>
+      <div class="cap">${POS[i]}<b>${esc(c.name)}${c.rev ? ' (ngược)' : ''}</b></div>
+    </div>`).join('');
+  loading('Các lá bài đang chuẩn bị câu hỏi cho bạn…');
+  const qp = getQuestions().catch(() => null);          // gọi AI song song với lúc lật bài
+  await sleep(700);
+  for (let i = 0; i < 3; i++) {
+    $('#flip' + i).classList.add('on');
+    await sleep(900); $('#slot' + i).classList.add('shown'); cardSpark($('#flip' + i)); await sleep(250);
+  }
+  let qs = await qp;
+  if (!qs || !qs.length) qs = [
+    {q: 'Điều gì trong câu hỏi này khiến bạn băn khoăn nhất lúc này?', options: ['Sợ quyết định sai', 'Thiếu thông tin', 'Áp lực từ người khác']},
+    {q: 'Nếu mọi việc suôn sẻ, bạn mong kết quả cuối cùng trông như thế nào?', options: ['Ổn định hơn', 'Tự do hơn', 'Được công nhận hơn']}];
+  askLoop(qs);
+}
+async function getQuestions() {
+  const txt = await ai([
+    {role: 'system', content: SYS},
+    {role: 'user', content: `Câu hỏi của người xem: "${question}"\nBa lá bài: ${cardsText(chosen)}.\nHãy đặt từ 2 đến 4 câu hỏi ngắn bằng tiếng Việt để hiểu rõ hơn hoàn cảnh của họ, bám theo ý nghĩa các lá bài và câu hỏi. Mỗi câu có 3 gợi ý trả lời ngắn (tối đa 6 từ). Không hỏi thông tin nhạy cảm như số giấy tờ hay tài khoản. Chỉ trả về JSON đúng dạng: {"questions":[{"q":"...","options":["...","...","..."]}]}`}
+  ], 900);
+  const m = txt.match(/\{[\s\S]*\}/);
+  const arr = JSON.parse(m[0]).questions.filter(x => x && x.q).slice(0, 4);
+  return arr.length >= 2 ? arr : null;
+}
+
+/* ---------- Hỏi đáp ---------- */
+const panel = $('#panel');
+function loading(t) { panel.innerHTML = `<div class="load"><div class="spin"></div><span>${esc(t)}</span></div>`; }
+const qa = [];
+function askLoop(qs, i = 0) {
+  if (i >= qs.length) return finish();
+  const q = qs[i], opts = Array.isArray(q.options) ? q.options.slice(0, 4) : [];
+  panel.innerHTML = `
+    <div class="prog">Câu ${i + 1} / ${qs.length}</div>
+    <h3>${esc(q.q)}</h3>
+    <div class="chips">${opts.map(o => `<button type="button">${esc(o)}</button>`).join('')}</div>
+    <textarea id="ans" placeholder="Viết câu trả lời của bạn…" maxlength="300"></textarea>
+    <button class="btn" id="next">${i === qs.length - 1 ? 'Xem lời giải' : 'Tiếp tục'}</button>
+    <div class="err" id="aerr"></div>`;
+  const ta = $('#ans'); ta.focus();
+  panel.querySelector('.chips').onclick = e => { if (e.target.tagName === 'BUTTON') { ta.value = e.target.textContent; ta.focus(); } };
+  $('#next').onclick = () => {
+    const a = ta.value.trim();
+    if (!a) { $('#aerr').textContent = 'Hãy chọn một gợi ý hoặc viết vài chữ nhé.'; return; }
+    qa.push({q: q.q, a}); askLoop(qs, i + 1);
+  };
+}
+
+/* ---------- Kết quả ---------- */
+async function finish() {
+  loading('Đang đọc bài cho bạn…');
+  try {
+    const txt = await ai([
+      {role: 'system', content: SYS},
+      {role: 'user', content: `Câu hỏi: "${question}"\nBa lá bài: ${cardsText(chosen)}.\nCâu trả lời của người xem:\n${qa.map((x, i) => `${i + 1}. ${x.q}\n   → ${x.a}`).join('\n')}\n\nHãy đọc bài bằng tiếng Việt, khoảng 300–400 từ, theo đúng các phần sau (dùng dòng bắt đầu bằng "## " làm tiêu đề):\n## Tổng quan\n## Ý nghĩa ba lá bài (giải từng lá theo vị trí, gắn với câu trả lời của người xem)\n## Câu trả lời cho điều bạn muốn biết (trả lời thẳng vào câu hỏi, nêu khuynh hướng chứ không khẳng định chắc chắn)\n## Lời khuyên (2–3 gạch đầu dòng "- " hành động cụ thể)`}
+    ], 2500);
+    panel.innerHTML = `<div class="res">${md(txt)}</div>
+      <div class="foot">Tarot là công cụ để suy ngẫm, không thay thế lời khuyên chuyên môn về sức khỏe, pháp lý hay tài chính.</div>
+      <div class="actions"><button class="btn" id="again">Hỏi một câu khác</button><button class="btn ghost" id="copy">Sao chép kết quả</button></div>`;
+    $('#again').onclick = () => location.reload();
+    $('#copy').onclick = async e => { try { await navigator.clipboard.writeText(txt); e.target.textContent = 'Đã sao chép'; } catch (x) {} };
+    panel.scrollIntoView({behavior: 'smooth', block: 'start'});
+  } catch (e) {
+    panel.innerHTML = `<h3>Chưa đọc được bài</h3><p class="err" style="min-height:0">${esc(e.message)}</p><div class="actions"><button class="btn" id="retry">Thử lại</button></div>`;
+    $('#retry').onclick = finish;
+  }
+}
+function md(t) {
+  let out = '', list = false;
+  const inl = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  for (const raw of t.split('\n')) {
+    const l = raw.trim();
+    if (/^[-•*] /.test(l)) { if (!list) { out += '<ul>'; list = true; } out += '<li>' + inl(l.replace(/^[-•*] /, '')) + '</li>'; continue; }
+    if (list) { out += '</ul>'; list = false; }
+    if (!l) continue;
+    if (/^#{1,4} /.test(l)) out += '<h3>' + inl(l.replace(/^#{1,4} /, '')) + '</h3>';
+    else out += '<p>' + inl(l) + '</p>';
+  }
+  return out + (list ? '</ul>' : '');
+}
+</script>
+</body>
+</html>
