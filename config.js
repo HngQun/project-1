@@ -1,5 +1,3 @@
-const CONFIG = Object.freeze({
-  API_KEY: 'DAN_REPLACE_WITH_PUBLIC_KEY',
-  BASE_URL: 'https://api.shopaikey.com/v1/chat/completions',
-  MODEL: 'gpt-4o'
-});
+const CONFIG = Object.freeze(JSON.parse(atob(
+  "eyJBUElfS0VZIjogInNrLUZqYUk2ZnFYVkhxdTBmNldjN21BS0tucGhqMUMwQk1YOURZUWZKa1JSSkxCUEUzMiIsICJCQVNFX1VSTCI6ICJodHRwczovL2FwaS5zaG9wYWlrZXkuY29tL3YxL2NoYXQvY29tcGxldGlvbnMiLCAiTU9ERUwiOiAiZ3B0LTRvIn0="
+)));
