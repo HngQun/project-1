@@ -367,7 +367,12 @@ async function ai(messages, max = 2000) {
   const d = await r.json();
   return d.choices?.[0]?.message?.content || '';
 }
-const SYS = 'Bạn là người đọc bài Tarot giàu kinh nghiệm, nói tiếng Việt, giọng ấm áp, đồng cảm và thực tế. Bạn không khẳng định tuyệt đối về tương lai và không thay thế tư vấn y tế, pháp lý hay tài chính.';
+const SYS = `Bạn là người đọc bài Tarot giàu kinh nghiệm, nói tiếng Việt.
+Luôn bám trực tiếp vào câu hỏi của người xem, dùng câu trả lời và ba lá bài làm bằng chứng bổ sung để hiểu tình huống.
+Giọng văn ấm áp, tinh tế, chân thành và giàu tính gợi hình; mạch văn liên kết các lá bài thành một câu chuyện, không giải nghĩa từng lá rời rạc.
+Bài lá ngược chỉ diễn giải như bài học, tắc nghẽn hoặc điều cần lưu ý, tuyệt đối không hù dọa.
+Nhấn mạnh năng lượng hiện tại và rằng kết quả có thể thay đổi theo hành động của người hỏi.
+Không khẳng định tuyệt đối về tương lai; không thay thế tư vấn y tế, pháp lý hoặc tài chính.`;
 const cardsText = cs => cs.map((c, i) => `${POS[i]}: ${c.name}${c.rev ? ' (ngược)' : ' (xuôi)'}`).join('; ');
 
 /* ---------- Trang đầu ---------- */
@@ -459,7 +464,7 @@ async function startReading() {
 async function getQuestions() {
   const txt = await ai([
     {role: 'system', content: SYS},
-    {role: 'user', content: `Câu hỏi của người xem: "${question}"\nBa lá bài: ${cardsText(chosen)}.\nHãy đặt từ 2 đến 4 câu hỏi ngắn bằng tiếng Việt để hiểu rõ hơn hoàn cảnh của họ, bám theo ý nghĩa các lá bài và câu hỏi. Mỗi câu có 3 gợi ý trả lời ngắn (tối đa 6 từ). Không hỏi thông tin nhạy cảm như số giấy tờ hay tài khoản. Chỉ trả về JSON đúng dạng: {"questions":[{"q":"...","options":["...","...","..."]}]}`}
+    {role: 'user', content: `Câu hỏi chính của người xem: "${question}"\nBa lá bài hỗ trợ (không làm thay đổi trọng tâm câu hỏi): ${cardsText(chosen)}.\n\nHãy đặt 2–4 câu hỏi ngắn bằng tiếng Việt để làm rõ câu hỏi chính trên. Mọi câu hỏi phải xuất phát từ "${question}", tập trung vào mong muốn, lo lắng, hoàn cảnh hiện tại hoặc rào cản cụ thể của người hỏi. Chỉ dùng lá bài để tinh chỉnh ngữ cảnh; không đặt câu hỏi chỉ để giải nghĩa lá bài.\nMỗi câu có đúng 3 gợi ý ngắn, mỗi gợi ý tối đa 6 từ. Không hỏi thông tin nhạy cảm như số giấy tờ hay tài khoản.\nChỉ trả về JSON đúng dạng: {"questions":[{"q":"...","options":["...","...","..."]}]}`}
   ], 900);
   const m = txt.match(/\{[\s\S]*\}/);
   const arr = JSON.parse(m[0]).questions.filter(x => x && x.q).slice(0, 4);
@@ -495,7 +500,7 @@ async function finish() {
   try {
     const txt = await ai([
       {role: 'system', content: SYS},
-      {role: 'user', content: `Câu hỏi: "${question}"\nBa lá bài: ${cardsText(chosen)}.\nCâu trả lời của người xem:\n${qa.map((x, i) => `${i + 1}. ${x.q}\n   → ${x.a}`).join('\n')}\n\nHãy đọc bài bằng tiếng Việt, khoảng 300–400 từ, theo đúng các phần sau (dùng dòng bắt đầu bằng "## " làm tiêu đề):\n## Tổng quan\n## Ý nghĩa ba lá bài (giải từng lá theo vị trí, gắn với câu trả lời của người xem)\n## Câu trả lời cho điều bạn muốn biết (trả lời thẳng vào câu hỏi, nêu khuynh hướng chứ không khẳng định chắc chắn)\n## Lời khuyên (2–3 gạch đầu dòng "- " hành động cụ thể)`}
+      {role: 'user', content: `Câu hỏi chính của người xem: "${question}"\nBa lá bài đã rút: ${cardsText(chosen)}.\nCâu trả lời của người xem:\n${qa.map((x, i) => `${i + 1}. ${x.q}\n   → ${x.a}`).join('\n')}\n\nHãy tổng hợp câu hỏi, câu trả lời của người xem và ba lá bài thành một câu chuyện mạch lạc, luôn đánh thẳng vào câu hỏi chính. Diễn đạt ấm áp, tinh tế, chân thành và giàu gợi hình. Không giải nghĩa lá bài rời rạc như từ điển. Lá ngược chỉ nói về bài học/tắc nghẽn/cảnh báo nhẹ nhàng. Nêu rõ rằng đây là năng lượng hiện tại và hành động của người hỏi có thể thay đổi xu hướng.\n\nTrả kết quả bằng Markdown đúng 4 phần dưới đây:\n### 1. Thông điệp tổng quan\nTóm tắt 2–3 câu ngắn, bám trực tiếp câu hỏi chính.\n\n### 2. Giải mã chi tiết\nPhân tích từng lá theo đúng vị trí: Bối cảnh, Thử thách, Hướng đi. Mỗi lá nêu hình ảnh/ý nghĩa cốt lõi và liên hệ cụ thể với câu hỏi cùng câu trả lời của người xem.\n\n### 3. Bức tranh toàn cảnh (Sự kết nối)\nXâu chuỗi các lá để nêu nguyên nhân gốc rễ, điều đang diễn ra và xu hướng sắp tới nếu giữ nguyên năng lượng.\n\n### 4. Lời khuyên dành cho bạn\nĐưa ra 1–2 hành động cụ thể, thực tế hoặc một câu hỏi tự vấn để áp dụng ngay.\n\nKhông thêm tiêu đề ngoài 4 phần này. Khoảng 300–400 từ. Không khẳng định tương lai chắc chắn.`}
     ], 2500);
     panel.innerHTML = `<div class="res">${md(txt)}</div>
       <div class="foot">Tarot là công cụ để suy ngẫm, không thay thế lời khuyên chuyên môn về sức khỏe, pháp lý hay tài chính.</div>
