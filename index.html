@@ -305,17 +305,20 @@ function ensureAudio() {
 async function setAudioEnabled(enabled) {
   if (enabled) {
     try {
+      backgroundAudio.muted = false;
       await backgroundAudio.play();
       audioEnabled = true;
       updateAudioControl();
       soundStatus.textContent = '';
       soundStatus.hidden = true;
     } catch (error) {
-      backgroundAudio.muted = true;
       audioEnabled = false;
       updateAudioControl();
-      soundStatus.hidden = true;
-      console.error('Không thể phát nhạc nền:', error);
+      soundStatus.textContent = error.name === 'NotAllowedError'
+        ? 'Nhấn Bật nhạc để bắt đầu phát nhạc nền.'
+        : 'Không thể phát nhạc nền. Vui lòng thử lại.';
+      soundStatus.hidden = false;
+      if (error.name !== 'NotAllowedError') console.error('Không thể phát nhạc nền:', error);
     }
   } else {
     audioEnabled = false;
@@ -397,21 +400,20 @@ soundToggle.addEventListener('click', () => {
   setAudioEnabled(!audioEnabled);
 });
 
-// Thử tự phát có tiếng ngay khi tải trang; nếu trình duyệt chặn autoplay,
-// phát lại ở lần tương tác đầu tiên.
-setAudioEnabled(true);
+// Chỉ phát có tiếng sau tương tác; click hỗ trợ cả chuột và thao tác chạm.
+updateAudioControl();
 
 let autoplayFallbackPending = true;
 async function enableAudioAfterInteraction(event) {
   if (event.target?.closest('#soundToggle')) return;
   if (!autoplayFallbackPending || audioChosen) return;
   autoplayFallbackPending = false;
-  backgroundAudio.muted = false;
   await setAudioEnabled(true);
+  if (!audioEnabled) autoplayFallbackPending = true;
 }
 
-document.addEventListener('pointerdown', enableAudioAfterInteraction, {once: true});
-document.addEventListener('keydown', enableAudioAfterInteraction, {once: true});
+document.addEventListener('click', enableAudioAfterInteraction);
+document.addEventListener('keydown', enableAudioAfterInteraction);
 
 document.addEventListener('click', event => {
   const button = event.target.closest('button');
