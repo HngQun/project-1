@@ -279,7 +279,7 @@ backgroundAudio.src = new URL('./music/mixkit-valley-sunset-127.mp3', window.loc
 backgroundAudio.loop = true;
 backgroundAudio.preload = 'auto';
 backgroundAudio.volume = 0.25;
-backgroundAudio.muted = true;
+backgroundAudio.muted = false;
 backgroundAudio.onerror = () => {
   soundStatus.hidden = true;
   console.error('Không tải được file nhạc. Hãy kiểm tra thư mục music.');
@@ -305,9 +305,7 @@ function ensureAudio() {
 async function setAudioEnabled(enabled) {
   if (enabled) {
     try {
-      backgroundAudio.muted = true;
       await backgroundAudio.play();
-      backgroundAudio.muted = false;
       audioEnabled = true;
       updateAudioControl();
       soundStatus.textContent = '';
@@ -399,9 +397,9 @@ soundToggle.addEventListener('click', () => {
   setAudioEnabled(!audioEnabled);
 });
 
-// Phát bị tắt tiếng để trình duyệt có thể phát nền ngay khi tải trang.
-// Âm thanh sẽ được mở ở lần tương tác đầu tiên do chính sách autoplay.
-backgroundAudio.play().catch(() => {});
+// Thử tự phát có tiếng ngay khi tải trang; nếu trình duyệt chặn autoplay,
+// phát lại ở lần tương tác đầu tiên.
+setAudioEnabled(true);
 
 let autoplayFallbackPending = true;
 async function enableAudioAfterInteraction(event) {
