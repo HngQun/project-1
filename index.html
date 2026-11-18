@@ -179,6 +179,7 @@ animation:nebula-drift 28s ease-in-out infinite alternate}
 <section class="stage" id="s-spread" hidden>
   <div class="head"><h2>Chọn ba lá bài thu hút bạn</h2></div>
   <div class="q-echo" id="echo"></div>
+  <div class="hint" id="spreadContext"></div>
   <div class="hint">Hít một hơi sâu, tập trung vào câu hỏi rồi chạm vào ba lá bài.</div>
   <div class="fan" id="fan"></div>
   <div class="count" id="count">Đã chọn 0 / 3</div>
@@ -188,6 +189,7 @@ animation:nebula-drift 28s ease-in-out infinite alternate}
 <section class="stage" id="s-read" hidden>
   <div class="head"><h2>Thông điệp từ ba lá bài</h2></div>
   <div class="q-echo" id="echo2"></div>
+  <div class="hint" id="spreadContext2"></div>
   <div class="row3" id="row3"></div>
   <div class="panel" id="panel"></div>
 </section>
@@ -345,7 +347,122 @@ const CARD_IMAGES = [
 DECK.forEach((card, i) => {
   card.image = "images/cards/" + CARD_IMAGES[i];
 });
-const POS = ['Bối cảnh', 'Thử thách', 'Hướng đi'];
+const SPREADS = [
+  {
+    id: 'general',
+    name: 'Bối cảnh chung',
+    description: 'Nhìn lại tình hình, thử thách và hướng đi.',
+    positions: ['Bối cảnh', 'Thử thách', 'Hướng đi'],
+    keywords: []
+  },
+  {
+    id: 'relationship',
+    name: 'Phân tích kết nối',
+    description: 'Soi chiếu bạn, đối phương và sợi dây liên kết.',
+    positions: ['Bạn', 'Đối phương', 'Mối quan hệ'],
+    keywords: [
+      ['mối quan hệ', 2], ['tình yêu', 2], ['người yêu', 2], ['bạn trai', 2],
+      ['bạn gái', 2], ['crush', 2], ['đối phương', 2], ['tình cảm', 1],
+      ['hẹn hò', 2], ['kết nối giữa', 2]
+    ]
+  },
+  {
+    id: 'relationship-status',
+    name: 'Tình trạng hiện tại',
+    description: 'Nhìn vào cảm xúc, rào cản và tiềm năng phát triển.',
+    positions: ['Cảm xúc thực sự', 'Rào cản hiện tại', 'Tiềm năng phát triển'],
+    keywords: [
+      ['cảm xúc thực sự', 4], ['người ấy có yêu', 4], ['có yêu tôi', 4],
+      ['mối quan hệ mập mờ', 4], ['mập mờ', 3], ['rạn nứt', 3], ['chia tay', 3],
+      ['quay lại với', 3], ['tình trạng mối quan hệ', 4], ['cảm xúc của người ấy', 4],
+      ['người ấy nghĩ gì', 3], ['có còn tình cảm', 4], ['rào cản trong tình yêu', 3],
+      ['người ấy có thích', 4], ['có thích tôi', 4], ['tình cảm của người ấy', 4],
+      ['tiềm năng phát triển', 3], ['rào cản hiện tại', 3]
+    ]
+  },
+  {
+    id: 'choice',
+    name: 'Cân nhắc lựa chọn',
+    description: 'So sánh hai hướng đi và tìm lời khuyên cốt lõi.',
+    positions: ['Lựa chọn A', 'Lựa chọn B', 'Lời khuyên cốt lõi'],
+    keywords: [
+      ['nên chọn', 4], ['lựa chọn giữa', 4], ['chọn cái nào', 4], ['chọn bên nào', 4],
+      ['phân vân giữa', 4], ['nên làm hay', 3], ['có nên', 2], ['nên hay không', 3],
+      ['quyết định', 2], ['lựa chọn', 2], ['đổi việc', 2], ['chuyển việc', 2],
+      ['tiếp tục hay dừng lại', 4], ['ở lại hay', 3], ['đứng trước lựa chọn', 3]
+    ]
+  },
+  {
+    id: 'risk',
+    name: 'Đánh giá rủi ro',
+    description: 'Cân nhắc thuận lợi, bất lợi và kết quả tiềm năng.',
+    positions: ['Điểm thuận lợi', 'Điểm bất lợi', 'Kết quả tiềm năng'],
+    keywords: [
+      ['rủi ro', 4], ['đầu tư', 3], ['nhảy việc', 4], ['nhảy sang việc', 4],
+      ['lợi và hại', 4], ['thuận lợi và bất lợi', 4], ['ưu nhược điểm', 4],
+      ['mất gì nếu', 3], ['cơ hội và thách thức', 3], ['có đáng để', 2],
+      ['điểm thuận lợi', 3], ['điểm bất lợi', 3], ['kết quả tiềm năng', 3]
+    ]
+  },
+  {
+    id: 'inner-state',
+    name: 'Trạng thái nội tâm',
+    description: 'Kết nối điều bạn nghĩ, cảm nhận và đang làm.',
+    positions: ['Suy nghĩ (Lý trí)', 'Cảm xúc (Trái tim)', 'Hành động (Thực tế)'],
+    keywords: [
+      ['trạng thái nội tâm', 4], ['suy nghĩ và cảm xúc', 4], ['lý trí và trái tim', 4],
+      ['trong lòng', 2], ['bản thân tôi', 2], ['tôi đang cảm thấy', 3],
+      ['tâm trạng', 2], ['suy nghĩ của tôi', 3], ['cảm xúc của tôi', 3],
+      ['mâu thuẫn với chính mình', 3], ['lý trí', 1], ['trái tim', 1],
+      ['suy nghĩ (lý trí)', 3], ['cảm xúc (trái tim)', 3]
+    ]
+  },
+  {
+    id: 'healing',
+    name: 'Chữa lành & Chuyển hóa',
+    description: 'Nhận diện điều cần buông bỏ, chấp nhận và hướng tới.',
+    positions: ['Điều cần buông bỏ', 'Điều cần chấp nhận', 'Điều cần hướng tới'],
+    keywords: [
+      ['chữa lành', 4], ['buông bỏ', 3], ['chấp nhận', 2], ['biến cố', 2],
+      ['mất phương hướng', 4], ['bế tắc', 3], ['vượt qua nỗi đau', 4],
+      ['tổn thương', 2], ['bước tiếp sau', 3], ['làm sao để vượt qua', 3],
+      ['quá khứ', 1], ['chuyển hóa', 3]
+    ]
+  },
+  {
+    id: 'daily',
+    name: 'Năng lượng trong ngày',
+    description: 'Khám phá năng lượng chủ đạo, điều cần lưu ý và cơ hội.',
+    positions: ['Năng lượng chủ đạo', 'Điều cần lưu ý', 'Cơ hội bất ngờ'],
+    keywords: [
+      ['năng lượng trong ngày', 4], ['hôm nay', 3], ['trong ngày', 3],
+      ['ngày hôm nay', 3], ['ngày mai', 2], ['tuần này', 2], ['một ngày của tôi', 3],
+      ['rút bài mỗi ngày', 4], ['năng lượng chủ đạo', 3], ['cơ hội bất ngờ', 3],
+      ['điều cần lưu ý hôm nay', 3]
+    ]
+  }
+];
+let activeSpread = SPREADS[0];
+let POS = activeSpread.positions;
+
+function normalizeText(text) {
+  return text.toLocaleLowerCase('vi')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+}
+
+function chooseSpread(text) {
+  const normalized = normalizeText(text);
+  let best = SPREADS[0], bestScore = 0;
+  for (const spread of SPREADS.slice(1)) {
+    const score = spread.keywords.reduce((total, [keyword, weight]) => {
+      return total + (normalized.includes(normalizeText(keyword)) ? weight : 0);
+    }, 0);
+    if (score > bestScore) { best = spread; bestScore = score; }
+  }
+  return best;
+}
 
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
@@ -387,9 +504,12 @@ $('#askForm').onsubmit = e => {
   e.preventDefault();
   question = $('#q').value.trim();
   if (question.length < 4) { $('#err').textContent = 'Hãy viết câu hỏi của bạn (ít nhất vài chữ) để lá bài có điều để trả lời.'; return; }
+  activeSpread = chooseSpread(question);
+  POS = activeSpread.positions;
   $('#err').textContent = '';
   $('#s-hero').hidden = true; $('#s-spread').hidden = false;
   $('#echo').textContent = '“' + question + '”';
+  $('#spreadContext').textContent = `Dạng trải bài: ${activeSpread.name} — ${activeSpread.description}`;
   startSpread();
 };
 
@@ -440,6 +560,7 @@ async function startReading() {
   chosen = picks.map(i => deck[i]);
   $('#s-spread').hidden = true; $('#s-read').hidden = false;
   $('#echo2').textContent = '“' + question + '”';
+  $('#spreadContext2').textContent = `Dạng trải bài: ${activeSpread.name} — ${activeSpread.description}`;
   $('#row3').innerHTML = chosen.map((c, i) => `
     <div class="slot" id="slot${i}">
       <div class="flip" id="flip${i}"><div class="in">
@@ -500,7 +621,7 @@ async function finish() {
   try {
     const txt = await ai([
       {role: 'system', content: SYS},
-      {role: 'user', content: `Câu hỏi chính của người xem: "${question}"\nBa lá bài đã rút: ${cardsText(chosen)}.\nCâu trả lời của người xem:\n${qa.map((x, i) => `${i + 1}. ${x.q}\n   → ${x.a}`).join('\n')}\n\nHãy tổng hợp câu hỏi, câu trả lời của người xem và ba lá bài thành một câu chuyện mạch lạc, luôn đánh thẳng vào câu hỏi chính. Diễn đạt ấm áp, tinh tế, chân thành và giàu gợi hình. Không giải nghĩa lá bài rời rạc như từ điển. Lá ngược chỉ nói về bài học/tắc nghẽn/cảnh báo nhẹ nhàng. Nêu rõ rằng đây là năng lượng hiện tại và hành động của người hỏi có thể thay đổi xu hướng.\n\nTrả kết quả bằng Markdown đúng 4 phần dưới đây:\n### 1. Thông điệp tổng quan\nTóm tắt 2–3 câu ngắn, bám trực tiếp câu hỏi chính.\n\n### 2. Giải mã chi tiết\nPhân tích từng lá theo đúng vị trí: Bối cảnh, Thử thách, Hướng đi. Mỗi lá nêu hình ảnh/ý nghĩa cốt lõi và liên hệ cụ thể với câu hỏi cùng câu trả lời của người xem.\n\n### 3. Bức tranh toàn cảnh (Sự kết nối)\nXâu chuỗi các lá để nêu nguyên nhân gốc rễ, điều đang diễn ra và xu hướng sắp tới nếu giữ nguyên năng lượng.\n\n### 4. Lời khuyên dành cho bạn\nĐưa ra 1–2 hành động cụ thể, thực tế hoặc một câu hỏi tự vấn để áp dụng ngay.\n\nKhông thêm tiêu đề ngoài 4 phần này. Khoảng 300–400 từ. Không khẳng định tương lai chắc chắn.`}
+      {role: 'user', content: `Câu hỏi chính của người xem: "${question}"\nKiểu trải bài được chọn: ${activeSpread.name} — ${activeSpread.description}\nBa lá bài đã rút: ${cardsText(chosen)}.\nCâu trả lời của người xem:\n${qa.map((x, i) => `${i + 1}. ${x.q}\n   → ${x.a}`).join('\n')}\n\nHãy tổng hợp câu hỏi, câu trả lời của người xem và ba lá bài thành một câu chuyện mạch lạc, luôn đánh thẳng vào câu hỏi chính. Diễn đạt ấm áp, tinh tế, chân thành và giàu gợi hình. Không giải nghĩa lá bài rời rạc như từ điển. Lá ngược chỉ nói về bài học/tắc nghẽn/cảnh báo nhẹ nhàng. Nêu rõ rằng đây là năng lượng hiện tại và hành động của người hỏi có thể thay đổi xu hướng.\n\nTrả kết quả bằng Markdown đúng 4 phần dưới đây:\n### 1. Thông điệp tổng quan\nTóm tắt 2–3 câu ngắn, bám trực tiếp câu hỏi chính.\n\n### 2. Giải mã chi tiết\nPhân tích lần lượt ba lá theo đúng vị trí của kiểu trải bài "${activeSpread.name}": ${POS.join(', ')}. Mỗi lá nêu hình ảnh/ý nghĩa cốt lõi và liên hệ cụ thể với câu hỏi cùng câu trả lời của người xem.\n\n### 3. Bức tranh toàn cảnh (Sự kết nối)\nXâu chuỗi các lá để nêu nguyên nhân gốc rễ, điều đang diễn ra và xu hướng sắp tới nếu giữ nguyên năng lượng.\n\n### 4. Lời khuyên dành cho bạn\nĐưa ra 1–2 hành động cụ thể, thực tế hoặc một câu hỏi tự vấn để áp dụng ngay.\n\nKhông thêm tiêu đề ngoài 4 phần này. Khoảng 300–400 từ. Không khẳng định tương lai chắc chắn.`}
     ], 2500);
     panel.innerHTML = `<div class="res">${md(txt)}</div>
       <div class="foot">Tarot là công cụ để suy ngẫm, không thay thế lời khuyên chuyên môn về sức khỏe, pháp lý hay tài chính.</div>
