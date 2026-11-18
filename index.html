@@ -299,12 +299,21 @@ function ensureAudio() {
 
   audioContext = new AudioContext();
   audioMaster = audioContext.createGain();
-  audioMaster.gain.value = 0.0001;
+  audioMaster.gain.value = 0.8;
   audioMaster.connect(audioContext.destination);
 }
 
 async function setAudioEnabled(enabled) {
   if (enabled) {
+    // Mở khóa hiệu ứng ngay trong tương tác, trước khi chờ nhạc nền tải.
+    try {
+      ensureAudio();
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(error => console.warn('Không thể bật hiệu ứng âm thanh:', error));
+      }
+    } catch (error) {
+      console.warn('Không thể bật hiệu ứng âm thanh:', error);
+    }
     try {
       backgroundAudio.muted = false;
       await backgroundAudio.play();
@@ -386,13 +395,19 @@ function playSfx(type) {
   if (!audioEnabled) return;
   try {
     ensureAudio();
-    if (audioContext.state === 'suspended') audioContext.resume();
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(error => console.warn('Không thể phát hiệu ứng âm thanh:', error));
+    }
   } catch (error) {
     console.warn('Không thể phát hiệu ứng âm thanh:', error);
     return;
   }
   if (type === 'shuffle' || type === 'flip') playNoise(type);
   if (type === 'click') playTone(680, 0.1, 0.055);
+  if (type === 'select') {
+    playTone(880, 0.18, 0.09, 'triangle');
+    playTone(1320, 0.3, 0.035);
+  }
   if (type === 'flip') playTone(1046.5, 0.55, 0.035);
 }
 
@@ -709,7 +724,7 @@ async function toggle(i) {
   if (lock) return;
   const k = picks.indexOf(i);
   if (k >= 0) picks.splice(k, 1);
-  else { if (picks.length >= 3) return; picks.push(i); cardSpark(cards[i]); playSfx('click'); }
+  else { if (picks.length >= 3) return; picks.push(i); cardSpark(cards[i]); playSfx('select'); }
   cards.forEach((c, j) => c.classList.toggle('sel', picks.includes(j)));
   place(false); updateCount();
   if (picks.length === 3) {
