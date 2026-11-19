@@ -646,22 +646,30 @@ function chooseSpread(text) {
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 /* ---------- Gọi AI (ShopAIKey, định dạng OpenAI) ---------- */
-async function ai(messages, max = 2000) {
+async function ai(messages, max = 2000, timeoutMs = 60000) {
   if (!CONFIG.API_KEY || CONFIG.API_KEY.startsWith('DAN_')) throw new Error('Chưa điền API key. Mở file index.html và điền vào CONFIG.API_KEY.');
-  let r;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    r = await fetch(CONFIG.BASE_URL, {
+    const r = await fetch(CONFIG.BASE_URL, {
       method: 'POST',
+      signal: controller.signal,
       headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.API_KEY},
       body: JSON.stringify({model: CONFIG.MODEL, messages, max_tokens: max})
     });
-  } catch (e) { throw new Error('Không kết nối được tới API (mạng hoặc CORS). Mở F12 > Console để xem chi tiết.'); }
-  if (!r.ok) {
-    let t = ''; try { t = (await r.json()).error?.message || ''; } catch (e) {}
-    throw new Error('API trả lỗi ' + r.status + (t ? ': ' + t : ''));
+    if (!r.ok) {
+      let t = ''; try { t = (await r.json()).error?.message || ''; } catch (e) {}
+      throw new Error('API trả lỗi ' + r.status + (t ? ': ' + t : ''));
+    }
+    const d = await r.json();
+    return d.choices?.[0]?.message?.content || '';
+  } catch (e) {
+    if (controller.signal.aborted) throw new Error('API phản hồi quá lâu. Vui lòng thử lại.');
+    if (e instanceof TypeError) throw new Error('Không kết nối được tới API (mạng hoặc CORS). Mở F12 > Console để xem chi tiết.');
+    throw e;
+  } finally {
+    clearTimeout(timer);
   }
-  const d = await r.json();
-  return d.choices?.[0]?.message?.content || '';
 }
 const SYS = `Bạn là người đọc bài Tarot giàu kinh nghiệm, nói tiếng Việt.
 Luôn bám trực tiếp vào câu hỏi của người xem, dùng câu trả lời và ba lá bài làm bằng chứng bổ sung để hiểu tình huống.
@@ -767,7 +775,7 @@ async function getQuestions() {
   const txt = await ai([
     {role: 'system', content: SYS},
     {role: 'user', content: `Câu hỏi chính của người xem: "${question}"\nBa lá bài hỗ trợ (không làm thay đổi trọng tâm câu hỏi): ${cardsText(chosen)}.\n\nHãy đặt 2–4 câu hỏi ngắn bằng tiếng Việt để làm rõ câu hỏi chính trên. Mọi câu hỏi phải xuất phát từ "${question}", tập trung vào mong muốn, lo lắng, hoàn cảnh hiện tại hoặc rào cản cụ thể của người hỏi. Chỉ dùng lá bài để tinh chỉnh ngữ cảnh; không đặt câu hỏi chỉ để giải nghĩa lá bài.\nMỗi câu có đúng 3 gợi ý ngắn, mỗi gợi ý tối đa 6 từ. Không hỏi thông tin nhạy cảm như số giấy tờ hay tài khoản.\nChỉ trả về JSON đúng dạng: {"questions":[{"q":"...","options":["...","...","..."]}]}`}
-  ], 900);
+  ], 900, 15000);
   const m = txt.match(/\{[\s\S]*\}/);
   const arr = JSON.parse(m[0]).questions.filter(x => x && x.q).slice(0, 4);
   return arr.length >= 2 ? arr : null;
